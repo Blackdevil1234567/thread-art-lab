@@ -11,11 +11,14 @@ import {
   Palette, 
   CircleDot,
   Sparkles,
-  Trash2
+  Trash2,
+  Image as ImageIcon
 } from "lucide-react";
 import { toast } from "sonner";
 import { PatternGenerator } from "@/components/PatternGenerator";
 import { ColorPicker } from "@/components/ColorPicker";
+import { ImageUploader } from "@/components/ImageUploader";
+import { convertImageToThreadArt } from "@/utils/imageToThreadArt";
 import jsPDF from "jspdf";
 
 interface Pin {
@@ -37,12 +40,14 @@ const Studio = () => {
   const [pins, setPins] = useState<Pin[]>([]);
   const [threads, setThreads] = useState<Thread[]>([]);
   const [selectedColor, setSelectedColor] = useState("#00F5FF");
+  const [selectedColors, setSelectedColors] = useState<string[]>(["#00F5FF"]);
   const [threadWidth, setThreadWidth] = useState(2);
   const [pinCount, setPinCount] = useState(32);
-  const [mode, setMode] = useState<"place" | "connect">("place");
+  const [mode, setMode] = useState<"place" | "connect" | "image">("place");
   const [selectedPin, setSelectedPin] = useState<string | null>(null);
   const [history, setHistory] = useState<{ pins: Pin[]; threads: Thread[] }[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [uploadedImage, setUploadedImage] = useState<HTMLImageElement | null>(null);
 
   // Initialize canvas
   useEffect(() => {
@@ -289,7 +294,7 @@ const Studio = () => {
                   value={[pinCount]}
                   onValueChange={(v) => setPinCount(v[0])}
                   min={8}
-                  max={64}
+                  max={300}
                   step={4}
                   className="mb-2"
                 />
@@ -302,26 +307,73 @@ const Studio = () => {
               {/* Mode Toggle */}
               <div>
                 <label className="text-sm font-medium mb-2 block">Mode</label>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => setMode("place")}
-                    variant={mode === "place" ? "default" : "outline"}
-                    className="flex-1"
-                  >
-                    Place Pins
-                  </Button>
+                <div className="grid grid-cols-2 gap-2">
                   <Button
                     onClick={() => setMode("connect")}
                     variant={mode === "connect" ? "default" : "outline"}
-                    className="flex-1"
                   >
                     Connect
+                  </Button>
+                  <Button
+                    onClick={() => setMode("image")}
+                    variant={mode === "image" ? "default" : "outline"}
+                  >
+                    <ImageIcon className="mr-1 h-4 w-4" />
+                    Image
                   </Button>
                 </div>
               </div>
 
-              {/* Color Picker */}
-              <ColorPicker color={selectedColor} onChange={setSelectedColor} />
+              {/* Image Upload */}
+              {mode === "image" && (
+                <div className="space-y-4 p-4 border border-border rounded-lg bg-card/50">
+                  <ImageUploader onImageLoad={setUploadedImage} />
+                  
+                  <ColorPicker
+                    multiSelect
+                    selectedColors={selectedColors}
+                    onMultiColorChange={setSelectedColors}
+                  />
+                  
+                  <Button
+                    onClick={() => {
+                      if (!uploadedImage) {
+                        toast.error("Please upload an image first");
+                        return;
+                      }
+                      if (pins.length === 0) {
+                        toast.error("Please generate pins first");
+                        return;
+                      }
+                      if (selectedColors.length === 0) {
+                        toast.error("Please select at least one color");
+                        return;
+                      }
+                      
+                      const newThreads = convertImageToThreadArt(
+                        uploadedImage,
+                        pins,
+                        selectedColors,
+                        threadWidth,
+                        0.3
+                      );
+                      setThreads(newThreads);
+                      renderThreads(newThreads);
+                      addToHistory(pins, newThreads);
+                      toast.success(`Created ${newThreads.length} threads from image`);
+                    }}
+                    className="w-full"
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Convert to Thread Art
+                  </Button>
+                </div>
+              )}
+
+              {/* Color Picker for manual mode */}
+              {mode === "connect" && (
+                <ColorPicker color={selectedColor} onChange={setSelectedColor} />
+              )}
 
               {/* Thread Width */}
               <div>
