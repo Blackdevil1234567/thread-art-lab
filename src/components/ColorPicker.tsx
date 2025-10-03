@@ -15,6 +15,7 @@ const threadColors = [
   { name: "Purple", value: "#B864FF" },
   { name: "Green", value: "#00FF9F" },
   { name: "Orange", value: "#FF6B35" },
+  { name: "Black", value: "#000000" },
 ];
 
 export const ColorPicker = ({ 
