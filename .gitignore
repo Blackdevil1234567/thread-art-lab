@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+**/node_modules/
+venv/
+**/venv/
+
+# Python cache & artifacts
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Build & production outputs
+dist/
+**/dist/
+
+# Environment variables & secrets
+.env
+.env.local
+*.env
+
+# Temporary debug images & generated test files
+debug_*.jpg
+test_*.pdf
+test_image.jpg
+
+# Editor & System files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
